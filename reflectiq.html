@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReflectIQ — Smart Mirror System</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #4FC3F7;
+    --sun: #FFD600;
+    --mint: #69F0AE;
+    --coral: #FF7043;
+    --lavender: #CE93D8;
+    --indigo: #5C6BC0;
+    --bg: #E8EAF6;
+    --card: #ffffff;
+    --dark: #1A237E;
+    --text: #283593;
+    --shadow: 0 8px 32px rgba(26,35,126,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Nunito',sans-serif; background:var(--bg); min-height:100vh; overflow-x:hidden; }
+
+  .bg-blobs { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .blob { position:absolute; border-radius:50%; filter:blur(60px); opacity:0.30; animation:blobFloat 8s ease-in-out infinite alternate; }
+  .blob1 { width:420px; height:420px; background:#5C6BC0; top:-120px; left:-120px; }
+  .blob2 { width:300px; height:300px; background:var(--mint); top:40%; right:-80px; animation-delay:2s; }
+  .blob3 { width:260px; height:260px; background:var(--sun); bottom:-80px; left:30%; animation-delay:4s; }
+  .blob4 { width:220px; height:220px; background:var(--lavender); top:18%; left:55%; animation-delay:1s; }
+  @keyframes blobFloat { 0%{transform:translateY(0) scale(1);} 100%{transform:translateY(28px) scale(1.07);} }
+
+  header {
+    position:relative; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px;
+    background:rgba(255,255,255,0.72);
+    backdrop-filter:blur(14px);
+    border-bottom:2px solid rgba(92,107,192,0.18);
+  }
+  .logo { font-family:'Fredoka One',cursive; font-size:2rem; color:var(--dark); letter-spacing:1px; }
+  .logo-iq { color:var(--indigo); }
+  .logo-dot { color:var(--sun); }
+  nav { display:flex; gap:12px; flex-wrap:wrap; }
+  nav button {
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:0.9rem;
+    padding:10px 20px; border-radius:50px; border:none; cursor:pointer;
+    transition:transform 0.2s,box-shadow 0.2s;
+  }
+  nav button:hover { transform:translateY(-2px); }
+  .btn-home { background:var(--indigo); color:white; box-shadow:0 4px 12px rgba(92,107,192,0.4); }
+  .btn-features { background:var(--mint); color:#1B5E20; box-shadow:0 4px 12px rgba(105,240,174,0.4); }
+  .btn-demo { background:var(--sun); color:var(--dark); box-shadow:0 4px 12px rgba(255,214,0,0.4); }
+  .btn-hw { background:var(--dark); color:white; box-shadow:0 4px 12px rgba(26,35,126,0.4); }
+
+  main { position:relative; z-index:5; max-width:1200px; margin:0 auto; padding:40px 24px; }
+
+  .page-tabs { display:flex; gap:8px; margin-bottom:36px; flex-wrap:wrap; }
+  .page-tab {
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:0.95rem;
+    padding:12px 28px; border-radius:50px; border:3px solid transparent; cursor:pointer;
+    transition:all 0.2s; background:white; color:var(--text); box-shadow:var(--shadow);
+  }
+  .page-tab.active { background:var(--dark); color:white; border-color:var(--dark); }
+  .page-tab:hover:not(.active) { border-color:var(--indigo); transform:translateY(-2px); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* ── HERO ── */
+  .hero { display:flex; align-items:center; justify-content:space-between; gap:40px; margin-bottom:60px; flex-wrap:wrap; }
+  .hero-text { flex:1; min-width:280px; }
+  .hero-badge {
+    display:inline-block; background:var(--sun); color:var(--dark); font-weight:900;
+    font-size:0.8rem; padding:6px 16px; border-radius:50px; margin-bottom:16px;
+    letter-spacing:1px; text-transform:uppercase; animation:pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+  .hero h1 { font-family:'Fredoka One',cursive; font-size:3rem; color:var(--dark); line-height:1.1; margin-bottom:18px; }
+  .hero h1 span { color:var(--indigo); }
+  .hero p { font-size:1.05rem; color:var(--text); line-height:1.75; margin-bottom:28px; max-width:440px; }
+  .hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+  .btn-primary {
+    font-family:'Nunito',sans-serif; font-weight:900; font-size:1rem;
+    padding:14px 32px; border-radius:50px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,var(--indigo),#1A237E); color:white;
+    box-shadow:0 6px 20px rgba(92,107,192,0.45); transition:transform 0.2s;
+  }
+  .btn-primary:hover { transform:translateY(-3px); }
+  .btn-secondary {
+    font-family:'Nunito',sans-serif; font-weight:900; font-size:1rem;
+    padding:14px 32px; border-radius:50px; border:3px solid var(--dark);
+    cursor:pointer; background:transparent; color:var(--dark); transition:transform 0.2s,background 0.2s;
+  }
+  .btn-secondary:hover { transform:translateY(-3px); background:var(--dark); color:white; }
+
+  /* ── MIRROR ILLUSTRATION ── */
+  .mirror-hero-wrap {
+    flex:0 0 300px; display:flex; align-items:center; justify-content:center;
+    animation:mirrorFloat 4s ease-in-out infinite;
+  }
+  @keyframes mirrorFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+
+  /* ── STATS ── */
+  .stats-row { display:flex; gap:20px; margin-bottom:60px; flex-wrap:wrap; }
+  .stat-card {
+    flex:1; min-width:140px; background:var(--card); border-radius:24px; padding:24px;
+    text-align:center; box-shadow:var(--shadow); border:2px solid transparent; transition:transform 0.2s,border-color 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-4px); border-color:var(--indigo); }
+  .stat-emoji { font-size:2rem; margin-bottom:8px; }
+  .stat-num { font-family:'Fredoka One',cursive; font-size:2rem; color:var(--dark); }
+  .stat-label { font-size:0.82rem; color:#78909C; font-weight:700; margin-top:4px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title { font-family:'Fredoka One',cursive; font-size:1.8rem; color:var(--dark); margin-bottom:24px; }
+
+  /* ── FEATURES GRID ── */
+  .features-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; margin-bottom:60px; }
+  .feature-card {
+    background:var(--card); border-radius:24px; padding:28px 20px;
+    box-shadow:var(--shadow); border:3px solid transparent;
+    transition:transform 0.25s,box-shadow 0.25s; position:relative; overflow:hidden;
+  }
+  .feature-card:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 16px 40px rgba(26,35,126,0.15); }
+  .feature-card.fc-clock  { border-color:#5C6BC0; background:linear-gradient(135deg,#E8EAF6,#fff); }
+  .feature-card.fc-weather{ border-color:#4FC3F7; background:linear-gradient(135deg,#E3F2FD,#fff); }
+  .feature-card.fc-sched  { border-color:#69F0AE; background:linear-gradient(135deg,#E8F5E9,#fff); }
+  .feature-card.fc-quote  { border-color:#FFD600; background:linear-gradient(135deg,#FFFDE7,#fff); }
+  .feature-card.fc-news   { border-color:#FF7043; background:linear-gradient(135deg,#FBE9E7,#fff); }
+  .feature-card.fc-temp   { border-color:#CE93D8; background:linear-gradient(135deg,#F3E5F5,#fff); }
+  .feature-card.fc-pir    { border-color:#69F0AE; background:linear-gradient(135deg,#E8F5E9,#fff); }
+  .feature-card.fc-user   { border-color:#FFD600; background:linear-gradient(135deg,#FFFDE7,#fff); }
+  .feature-emoji { font-size:2.6rem; margin-bottom:12px; display:block; }
+  .feature-name { font-family:'Fredoka One',cursive; font-size:1.05rem; color:var(--dark); margin-bottom:6px; }
+  .feature-desc { font-size:0.8rem; font-weight:700; color:#90A4AE; line-height:1.5; }
+
+  /* ── MIRROR LIVE PREVIEW ── */
+  .mirror-preview-section { margin-bottom:60px; }
+  .mirror-frame-wrap {
+    background:var(--card); border-radius:32px; padding:32px;
+    box-shadow:var(--shadow); border:2px solid rgba(92,107,192,0.2);
+    display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap;
+  }
+  .mirror-display {
+    flex:0 0 260px;
+    background:#070710; border-radius:16px;
+    border:8px solid #1c1c2e; box-shadow:0 0 0 2px #333;
+    position:relative; overflow:hidden; aspect-ratio:2/3;
+    min-height:380px;
+  }
+  .mirror-glass {
+    position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,transparent 50%,rgba(255,255,255,0.02) 100%);
+    pointer-events:none; z-index:10;
+  }
+  .pir-dot {
+    position:absolute; top:7px; right:7px; width:8px; height:8px;
+    border-radius:50%; background:#4ADE80; z-index:20;
+    animation:pirBlink 2.2s ease-in-out infinite;
+  }
+  @keyframes pirBlink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+  /* Corner widgets */
+  .mw { position:absolute; z-index:5; font-family:'Nunito',sans-serif; }
+  .mw-tl { top:14px; left:14px; }
+  .mw-tr { top:14px; right:14px; text-align:right; }
+  .mw-bl { bottom:28px; left:14px; }
+  .mw-br { bottom:28px; right:14px; text-align:right; }
+  .mw-bc { bottom:28px; left:50%; transform:translateX(-50%); text-align:center; white-space:nowrap; }
+  .m-time { font-size:36px; font-weight:300; color:rgba(255,255,255,0.9); line-height:1; letter-spacing:-1px; }
+  .m-date { font-size:9px; color:rgba(255,255,255,0.38); margin-top:3px; letter-spacing:0.05em; }
+  .m-temp { font-size:24px; font-weight:300; color:rgba(255,255,255,0.85); line-height:1; }
+  .m-cond { font-size:8px; color:rgba(255,255,255,0.32); margin-top:2px; letter-spacing:0.04em; }
+  .m-sec-lbl { font-size:7px; color:rgba(255,255,255,0.22); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+  .m-sched-item { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+  .m-sdot { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+  .m-stime { font-size:8px; color:rgba(255,255,255,0.28); }
+  .m-stitle { font-size:9px; color:rgba(255,255,255,0.58); }
+  .m-sensor-row { display:flex; gap:10px; justify-content:flex-end; }
+  .m-sval { font-size:16px; font-weight:300; color:rgba(255,255,255,0.8); line-height:1; }
+  .m-slbl { font-size:7px; color:rgba(255,255,255,0.25); text-transform:uppercase; }
+  .m-greet { font-size:10px; color:rgba(255,255,255,0.38); font-style:italic; }
+  .m-quote { font-size:7px; color:rgba(255,255,255,0.18); font-style:italic; line-height:1.4; }
+  .mirror-ticker {
+    position:absolute; bottom:0; left:0; right:0;
+    padding:4px 12px; background:rgba(255,255,255,0.03);
+    border-top:0.5px solid rgba(255,255,255,0.05);
+    overflow:hidden; z-index:8;
+  }
+  .ticker-inner { display:inline-block; white-space:nowrap; font-size:7px; color:rgba(255,255,255,0.22); animation:ticker 22s linear infinite; }
+  @keyframes ticker { 0%{transform:translateX(260px);} 100%{transform:translateX(-100%);} }
+
+  /* Mirror info panel */
+  .mirror-info { flex:1; min-width:260px; display:flex; flex-direction:column; gap:16px; }
+  .mirror-info-title { font-family:'Fredoka One',cursive; font-size:1.3rem; color:var(--dark); margin-bottom:4px; }
+  .widget-list { display:flex; flex-direction:column; gap:8px; }
+  .widget-row {
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    border-radius:14px; background:#F8F9FF; border:1.5px solid #EEF2FF;
+    transition:border-color 0.2s; cursor:default;
+  }
+  .widget-row:hover { border-color:var(--indigo); }
+  .widget-row-icon { font-size:1.3rem; flex-shrink:0; }
+  .widget-row-name { font-size:0.88rem; font-weight:800; color:var(--dark); }
+  .widget-row-desc { font-size:0.75rem; color:#90A4AE; font-weight:600; }
+  .widget-badge {
+    margin-left:auto; font-size:0.7rem; font-weight:800; padding:3px 10px;
+    border-radius:50px; flex-shrink:0;
+  }
+  .badge-live { background:#E8F5E9; color:#2E7D32; }
+  .badge-api  { background:#E3F2FD; color:#0277BD; }
+  .badge-hw   { background:#F3E5F5; color:#6A1B9A; }
+  .badge-rtc  { background:#FFFDE7; color:#F57F17; }
+
+  /* ── FLOW ── */
+  .flow-section { margin-bottom:40px; }
+  .flow-title { font-family:'Fredoka One',cursive; font-size:1.4rem; color:var(--dark); margin-bottom:16px; }
+  .flow-steps { display:flex; gap:0; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .flow-step {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:16px 12px; min-width:105px; flex:1; max-width:140px;
+    background:var(--card); border-radius:20px; text-align:center;
+    box-shadow:var(--shadow); border:2px solid #EEF2FF; cursor:pointer;
+    transition:all 0.2s;
+  }
+  .flow-step:hover { transform:translateY(-4px); border-color:var(--indigo); }
+  .flow-step.step-active { border-color:var(--mint); background:#E8F5E9; }
+  .flow-step.step-done   { border-color:var(--indigo); background:#E8EAF6; }
+  .flow-emoji { font-size:1.8rem; }
+  .flow-label { font-size:0.75rem; font-weight:800; color:var(--dark); }
+  .flow-sub   { font-size:0.65rem; color:#90A4AE; font-weight:600; }
+  .flow-arrow { font-size:1.4rem; color:var(--indigo); padding:0 4px; flex-shrink:0; }
+
+  /* ── HW LAYOUT ── */
+  .hw-layout { display:grid; grid-template-columns:1fr 1.4fr 1fr; gap:24px; margin-bottom:40px; align-items:start; }
+  @media(max-width:900px){ .hw-layout{grid-template-columns:1fr;} }
+  .hw-card { background:var(--card); border-radius:24px; padding:24px; box-shadow:var(--shadow); border:2px solid #EEF2FF; }
+  .hw-card-title { font-family:'Fredoka One',cursive; font-size:1.1rem; color:var(--dark); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+  /* Tiny mirror in hw panel */
+  .hw-mirror-mini {
+    background:#070710; border-radius:12px; border:5px solid #1c1c2e;
+    width:140px; height:200px; position:relative; overflow:hidden; margin:0 auto 16px;
+  }
+  .hw-mirror-glass { position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,transparent 50%);pointer-events:none;z-index:3; }
+  .hw-pir { position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#4ADE80;z-index:5;animation:pirBlink 2.2s ease-in-out infinite; }
+  /* mini widgets */
+  .hw-m-time { position:absolute;top:10px;left:10px;font-size:22px;font-weight:300;color:rgba(255,255,255,0.88);letter-spacing:-1px;z-index:4; }
+  .hw-m-date { position:absolute;top:36px;left:10px;font-size:6px;color:rgba(255,255,255,0.3);z-index:4; }
+  .hw-m-weather { position:absolute;top:10px;right:10px;text-align:right;z-index:4; }
+  .hw-m-wtemp { font-size:16px;font-weight:300;color:rgba(255,255,255,0.82); }
+  .hw-m-wcond { font-size:6px;color:rgba(255,255,255,0.28); }
+  .hw-m-bottom { position:absolute;bottom:22px;left:10px;right:10px;z-index:4; }
+  .hw-m-greet { font-size:7px;color:rgba(255,255,255,0.35);font-style:italic;margin-bottom:6px; }
+  .hw-m-srow { display:flex;align-items:center;gap:4px;margin-bottom:3px; }
+  .hw-m-sdot { width:3px;height:3px;border-radius:50%; }
+  .hw-m-stxt { font-size:6.5px;color:rgba(255,255,255,0.5); }
+  .hw-m-ticker { position:absolute;bottom:0;left:0;right:0;padding:3px 8px;background:rgba(255,255,255,0.03);border-top:0.5px solid rgba(255,255,255,0.05);overflow:hidden;z-index:4; }
+  .hw-m-ticker-inner { display:inline-block;white-space:nowrap;font-size:5px;color:rgba(255,255,255,0.2);animation:ticker 18s linear infinite; }
+
+  /* LED row */
+  .led-strip { display:flex; gap:8px; align-items:center; justify-content:center; }
+  .led { width:13px; height:13px; border-radius:50%; border:2px solid rgba(0,0,0,0.1); }
+  .led.on-green { background:#4ADE80; box-shadow:0 0 7px #4ADE80; }
+  .led.on-blue  { background:#60A5FA; box-shadow:0 0 7px #60A5FA; }
+  .led.on-amber { background:#FBBF24; box-shadow:0 0 7px #FBBF24; }
+  .led.off      { background:#D1D5DB; }
+  .led-label { font-size:0.68rem; font-weight:700; color:#90A4AE; text-align:center; margin-top:3px; }
+
+  /* Comp list */
+  .comp-list { display:flex; flex-direction:column; gap:8px; }
+  .comp-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:#F8F9FF; border:1.5px solid #EEF2FF; transition:border-color 0.2s; }
+  .comp-item.active-comp { border-color:var(--indigo); background:#E8EAF6; }
+  .comp-icon { font-size:1.1rem; flex-shrink:0; }
+  .comp-name { font-size:0.82rem; font-weight:800; color:var(--dark); }
+  .comp-status { font-size:0.72rem; font-weight:600; color:#90A4AE; }
+  .comp-status.active-text { color:#00897B; }
+
+  /* Sim panel */
+  .sim-panel { background:var(--card); border-radius:24px; padding:28px; box-shadow:var(--shadow); border:2px solid rgba(92,107,192,0.2); margin-bottom:40px; }
+  .sim-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+  .sim-title { font-family:'Fredoka One',cursive; font-size:1.3rem; color:var(--dark); }
+  .sim-status-badge { padding:6px 16px; border-radius:50px; font-size:0.8rem; font-weight:800; background:#E8F5E9; color:#2E7D32; border:2px solid #A5D6A7; }
+
+  .sim-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+  @media(max-width:700px){ .sim-grid{grid-template-columns:1fr;} }
+  .sim-block { background:#F8F9FF; border-radius:16px; padding:16px; border:1.5px solid #EEF2FF; }
+  .sim-block-title { font-size:0.78rem; font-weight:800; color:#90A4AE; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+
+  .pir-status-block { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pir-circle {
+    width:44px; height:44px; border-radius:50%;
+    background:#4ADE80; box-shadow:0 0 16px #4ADE80;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; animation:pirBlink 2s ease-in-out infinite;
+  }
+  .pir-circle.inactive { background:#D1D5DB; box-shadow:none; animation:none; }
+  .pir-label { font-size:0.72rem; font-weight:700; color:#90A4AE; }
+
+  .api-status { display:flex; flex-direction:column; gap:4px; }
+  .api-row { display:flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; color:var(--text); }
+  .api-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+  .widget-toggles { display:flex; flex-direction:column; gap:6px; }
+  .w-toggle { display:flex; align-items:center; justify-content:space-between; font-size:0.78rem; font-weight:700; color:var(--text); }
+  .toggle-pill {
+    width:36px; height:20px; border-radius:50px; position:relative; cursor:pointer;
+    background:#4ADE80; border:none; transition:background 0.2s;
+  }
+  .toggle-pill::after { content:''; position:absolute; width:14px; height:14px; border-radius:50%; background:white; top:3px; left:19px; transition:left 0.2s; }
+  .toggle-pill.off { background:#D1D5DB; }
+  .toggle-pill.off::after { left:3px; }
+
+  .sim-response-wrap {
+    background:#E8EAF6; border-radius:16px; padding:14px 16px; margin-bottom:16px;
+    border:1.5px solid rgba(92,107,192,0.2);
+  }
+  .sim-response-label { font-size:0.72rem; font-weight:800; color:#90A4AE; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .sim-response-text { font-size:0.9rem; font-weight:700; color:var(--dark); line-height:1.5; min-height:40px; }
+
+  .sim-controls { display:flex; gap:10px; flex-wrap:wrap; }
+  .sim-btn { font-family:'Nunito',sans-serif; font-weight:800; font-size:0.85rem; padding:10px 22px; border-radius:50px; border:none; cursor:pointer; transition:transform 0.15s; flex:1; min-width:120px; }
+  .sim-btn:hover { transform:translateY(-2px); }
+  .sim-btn-pir    { background:var(--mint); color:#1B5E20; box-shadow:0 4px 12px rgba(105,240,174,0.4); }
+  .sim-btn-weather{ background:var(--sky); color:white; box-shadow:0 4px 12px rgba(79,195,247,0.4); }
+  .sim-btn-sleep  { background:#EEF2FF; color:var(--dark); }
+  .sim-btn-reset  { background:#FBE9E7; color:#BF360C; }
+
+  /* Serial log */
+  .sim-log { background:#0D1B2A; border-radius:14px; padding:16px; font-family:monospace; font-size:0.78rem; color:#69F0AE; line-height:1.8; max-height:160px; overflow-y:auto; }
+  .log-line { margin:0; }
+  .log-time { color:#4FC3F7; }
+  .log-warn { color:#FFD600; }
+  .log-err  { color:#FF7043; }
+  .log-info { color:#CE93D8; }
+
+  /* Wiring diagram */
+  .arduino-card { background:var(--card); border-radius:24px; padding:28px; box-shadow:var(--shadow); overflow-x:auto; margin-bottom:40px; }
+
+  /* Power bar */
+  .power-bar-bg { background:#EEF2FF; border-radius:50px; height:10px; overflow:hidden; margin-top:4px; }
+  .power-bar-fill { height:100%; border-radius:50px; background:linear-gradient(90deg,#69F0AE,#00C853); width:88%; }
+  .power-label { display:flex; justify-content:space-between; font-size:0.73rem; font-weight:700; color:#90A4AE; margin-top:4px; }
+
+
+  .typing-dots { display:inline-flex; gap:4px; align-items:center; }
+  .typing-dots span { width:7px; height:7px; border-radius:50%; background:var(--indigo); animation:typeDot 1.2s infinite; }
+  .typing-dots span:nth-child(2){animation-delay:0.2s;}
+  .typing-dots span:nth-child(3){animation-delay:0.4s;}
+  @keyframes typeDot { 0%,80%,100%{transform:scale(0.7);opacity:0.5;} 40%{transform:scale(1);opacity:1;} }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="blob blob1"></div><div class="blob blob2"></div>
+  <div class="blob blob3"></div><div class="blob blob4"></div>
+</div>
+
+<header>
+  <div class="logo">Reflect<span class="logo-iq">IQ</span><span class="logo-dot"> ✦</span></div>
+  <nav>
+    <button class="btn-home">🪞 Home</button>
+    <button class="btn-features" onclick="switchTab('features')">⭐ Features</button>
+    <button class="btn-demo" onclick="switchTab('mirror')">🖥️ Live Demo</button>
+    <button class="btn-hw" onclick="switchTab('hardware')">🔧 Hardware</button>
+  </nav>
+</header>
+
+<main>
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="switchTab('home')">🪞 Overview</button>
+    <button class="page-tab" onclick="switchTab('features')">⭐ Features</button>
+    <button class="page-tab" onclick="switchTab('mirror')">🖥️ Mirror Preview</button>
+    <button class="page-tab" onclick="switchTab('hardware')">🔧 Hardware Sim</button>
+  </div>
+
+  <!-- ══════════════ TAB: HOME ══════════════ -->
+  <div class="tab-content active" id="tab-home">
+
+    <section class="hero">
+      <div class="hero-text">
+        <div class="hero-badge">🪞 Smart Home Technology</div>
+        <h1>Your Mirror,<br><span>Reimagined</span><br>with AI!</h1>
+        <p>ReflectIQ transforms an ordinary bathroom or bedroom mirror into an intelligent, interactive display — showing time, weather, schedule, room temperature, news, and personalized greetings, all without touching your phone! 🌟</p>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="switchTab('mirror')">🖥️ See Live Demo</button>
+          <button class="btn-secondary" onclick="switchTab('hardware')">🔧 How It Works</button>
+        </div>
+      </div>
+
+      <!-- Hero mirror illustration -->
+      <div class="mirror-hero-wrap">
+        <div style="position:relative; width:220px; height:310px;">
+          <!-- Frame -->
+          <div style="position:absolute;inset:0;background:#1c1c2e;border-radius:18px;border:4px solid #2a2a40;"></div>
+          <!-- Glass -->
+          <div style="position:absolute;inset:8px;background:#070710;border-radius:12px;overflow:hidden;">
+            <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.06) 0%,transparent 50%);z-index:3;pointer-events:none;"></div>
+            <!-- Silhouette -->
+            <svg style="position:absolute;left:50%;top:8%;transform:translateX(-50%);width:45%;height:80%;opacity:0.07;z-index:1;" viewBox="0 0 100 220">
+              <ellipse cx="50" cy="22" rx="16" ry="18" fill="white"/>
+              <path d="M20 80 Q18 140 22 200 L38 200 L40 140 L50 155 L60 140 L62 200 L78 200 Q82 140 80 80 Q70 55 50 55 Q30 55 20 80Z" fill="white"/>
+              <path d="M20 80 Q5 90 2 130 L18 132 Q20 105 28 90Z" fill="white"/>
+              <path d="M80 80 Q95 90 98 130 L82 132 Q80 105 72 90Z" fill="white"/>
+            </svg>
+            <!-- Widgets -->
+            <div style="position:absolute;top:12px;left:12px;z-index:4;">
+              <div style="font-size:28px;font-weight:300;color:rgba(255,255,255,0.9);line-height:1;letter-spacing:-1px;" id="hero-clock">07:42</div>
+              <div style="font-size:7px;color:rgba(255,255,255,0.35);margin-top:2px;">Wednesday, April 29</div>
+            </div>
+            <div style="position:absolute;top:12px;right:12px;text-align:right;z-index:4;">
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);">⛅</div>
+              <div style="font-size:18px;font-weight:300;color:rgba(255,255,255,0.85);">31°C</div>
+              <div style="font-size:6px;color:rgba(255,255,255,0.28);">QC · Partly cloudy</div>
+            </div>
+            <div style="position:absolute;bottom:28px;left:12px;z-index:4;">
+              <div style="font-size:6px;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Today</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;"><div style="width:4px;height:4px;border-radius:50%;background:#4ADE80;flex-shrink:0;"></div><div style="font-size:7px;color:rgba(255,255,255,0.52);">8:00 Standup</div></div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;"><div style="width:4px;height:4px;border-radius:50%;background:#60A5FA;flex-shrink:0;"></div><div style="font-size:7px;color:rgba(255,255,255,0.52);">10:30 Demo</div></div>
+              <div style="display:flex;align-items:center;gap:4px;"><div style="width:4px;height:4px;border-radius:50%;background:#FBBF24;flex-shrink:0;"></div><div style="font-size:7px;color:rgba(255,255,255,0.52);">3:00 Meeting</div></div>
+            </div>
+            <div style="position:absolute;bottom:28px;right:12px;text-align:right;z-index:4;">
+              <div style="font-size:6px;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:4px;">Room</div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <div><div style="font-size:14px;font-weight:300;color:rgba(255,255,255,0.8);">29°C</div><div style="font-size:6px;color:rgba(255,255,255,0.24);">Temp</div></div>
+                <div><div style="font-size:14px;font-weight:300;color:rgba(255,255,255,0.8);">72%</div><div style="font-size:6px;color:rgba(255,255,255,0.24);">Hum</div></div>
+              </div>
+            </div>
+            <!-- ticker -->
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:3px 10px;background:rgba(255,255,255,0.03);border-top:0.5px solid rgba(255,255,255,0.05);overflow:hidden;z-index:4;">
+              <span style="display:inline-block;white-space:nowrap;font-size:6px;color:rgba(255,255,255,0.2);animation:ticker 18s linear infinite;">◆ DICT launches digital literacy program &nbsp;&nbsp; ◆ Pagasa: afternoon showers Metro Manila &nbsp;&nbsp; ◆ Senate approves AI bill &nbsp;&nbsp;</span>
+            </div>
+            <!-- pir dot -->
+            <div style="position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:#4ADE80;z-index:5;animation:pirBlink 2.2s ease-in-out infinite;"></div>
+          </div>
+          <!-- Decorative stars -->
+          <div style="position:absolute;top:-12px;right:-10px;font-size:1.4rem;opacity:0.7;">✨</div>
+          <div style="position:absolute;bottom:-10px;left:-12px;font-size:1.1rem;opacity:0.6;">⭐</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-emoji">🧩</div><div class="stat-num">8</div><div class="stat-label">Modules</div></div>
+      <div class="stat-card"><div class="stat-emoji">📡</div><div class="stat-num">3</div><div class="stat-label">Live APIs</div></div>
+      <div class="stat-card"><div class="stat-emoji">⚡</div><div class="stat-num">24/7</div><div class="stat-label">Always On</div></div>
+      <div class="stat-card"><div class="stat-emoji">🌡️</div><div class="stat-num">DHT11</div><div class="stat-label">Sensor</div></div>
+      <div class="stat-card"><div class="stat-emoji">🏠</div><div class="stat-num">PH</div><div class="stat-label">Localized</div></div>
+    </div>
+
+    <h2 class="section-title">🧩 What Makes ReflectIQ Smart?</h2>
+    <div class="features-grid">
+      <div class="feature-card fc-clock"><span class="feature-emoji">🕐</span><div class="feature-name">Clock & Date</div><div class="feature-desc">Accurate real-time clock powered by the DS3231 RTC module — works even without internet.</div></div>
+      <div class="feature-card fc-weather"><span class="feature-emoji">🌤️</span><div class="feature-name">Live Weather</div><div class="feature-desc">Fetches current Quezon City weather via OpenWeatherMap API — temperature, humidity, conditions.</div></div>
+      <div class="feature-card fc-sched"><span class="feature-emoji">📅</span><div class="feature-name">Schedule & Reminders</div><div class="feature-desc">Displays your daily schedule and alerts so you never miss a class, meeting, or event.</div></div>
+      <div class="feature-card fc-quote"><span class="feature-emoji">💬</span><div class="feature-name">Motivational Quotes</div><div class="feature-desc">Rotates daily quotes from a local database to keep you inspired every morning.</div></div>
+      <div class="feature-card fc-news"><span class="feature-emoji">📰</span><div class="feature-name">PH News Ticker</div><div class="feature-desc">Scrolls top Philippine news headlines fetched live from an RSS feed at the bottom of the mirror.</div></div>
+      <div class="feature-card fc-temp"><span class="feature-emoji">🌡️</span><div class="feature-name">Room Temperature</div><div class="feature-desc">Live temperature and humidity readings from the DHT11 sensor connected to the Arduino.</div></div>
+      <div class="feature-card fc-pir"><span class="feature-emoji">👁️</span><div class="feature-name">PIR Motion Sensor</div><div class="feature-desc">Display wakes when you walk up and sleeps when you leave — saves power, looks like a plain mirror.</div></div>
+      <div class="feature-card fc-user"><span class="feature-emoji">👤</span><div class="feature-name">User Profile</div><div class="feature-desc">Personalized greeting based on time of day and detected user — "Good morning, Juan!" 👋</div></div>
+    </div>
+
+  </div><!-- end tab-home -->
+
+  <!-- ══════════════ TAB: FEATURES ══════════════ -->
+  <div class="tab-content" id="tab-features">
+    <h2 class="section-title">⭐ All Features at a Glance</h2>
+    <div class="features-grid">
+      <div class="feature-card fc-clock"><span class="feature-emoji">🕐</span><div class="feature-name">Clock & Date</div><div class="feature-desc">DS3231 RTC module keeps time accurately without internet. Syncs with NTP when WiFi is available. Displays 24-hr or 12-hr format.</div></div>
+      <div class="feature-card fc-weather"><span class="feature-emoji">🌤️</span><div class="feature-name">Live Weather</div><div class="feature-desc">OpenWeatherMap API fetches real Quezon City weather every 10 minutes. Shows temperature, humidity, wind, and a weather icon.</div></div>
+      <div class="feature-card fc-sched"><span class="feature-emoji">📅</span><div class="feature-name">Schedule & Reminders</div><div class="feature-desc">JSON-based daily planner. Color-coded events: green (done), blue (upcoming), amber (urgent). Reminder alerts 10 minutes before.</div></div>
+      <div class="feature-card fc-quote"><span class="feature-emoji">💬</span><div class="feature-name">Motivational Quotes</div><div class="feature-desc">Database of 100+ curated quotes. Rotates daily at midnight. Displayed subtly near the top-center of the mirror.</div></div>
+      <div class="feature-card fc-news"><span class="feature-emoji">📰</span><div class="feature-name">PH News Ticker</div><div class="feature-desc">Scrolling bottom ticker fetches top 5 Philippine headlines via RSS. Refreshes every 30 minutes. Source: Rappler, GMA News.</div></div>
+      <div class="feature-card fc-temp"><span class="feature-emoji">🌡️</span><div class="feature-name">Room Sensor</div><div class="feature-desc">DHT11 on Arduino reads room temperature (°C) and humidity (%) in real-time. Data sent over serial to Raspberry Pi every 5 seconds.</div></div>
+      <div class="feature-card fc-pir"><span class="feature-emoji">👁️</span><div class="feature-name">PIR Wake / Sleep</div><div class="feature-desc">HC-SR501 PIR motion sensor detects presence. Display wakes in under 1 second. Auto-sleeps after 60 seconds of no motion. LED turns green when active.</div></div>
+      <div class="feature-card fc-user"><span class="feature-emoji">👤</span><div class="feature-name">User Personalization</div><div class="feature-desc">Configurable user profile (name, schedule, preferences). Greeting adapts to time of day. Future: face recognition via Pi camera.</div></div>
+    </div>
+
+    <!-- How the mirror looks: explanation cards -->
+    <h2 class="section-title">🖼️ Mirror Layout Explained</h2>
+    <div style="background:var(--card);border-radius:32px;padding:32px;box-shadow:var(--shadow);border:2px solid rgba(92,107,192,0.2);margin-bottom:40px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">↖️ Top-left</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Clock & Date</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Large, glanceable time. Date below in small text. Powered by DS3231 RTC for offline accuracy.</div>
+        </div>
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">↗️ Top-right</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Weather</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Temperature + condition icon. Right-aligned so it doesn't crowd the clock. Refreshes every 10 min.</div>
+        </div>
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">↙️ Bottom-left</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Schedule</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Today's top 3 events with color-coded dots and times. Never clutters the center reflection area.</div>
+        </div>
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">↘️ Bottom-right</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Room Sensor</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Live °C and % humidity from DHT11. Right-aligned. Updates every 5 seconds from Arduino serial.</div>
+        </div>
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">⬆️ Top-center</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Quote (faint)</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Very low opacity motivational quote. Subtle — you see it when you look for it, invisible otherwise.</div>
+        </div>
+        <div style="background:#F8F9FF;border-radius:16px;padding:16px;border:2px solid #EEF2FF;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">⬇️ Bottom-center</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">Greeting</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">"Good morning, Juan!" — personalized and time-aware. Small italic text, unobtrusive.</div>
+        </div>
+        <div style="grid-column:1/-1;background:#E8EAF6;border-radius:16px;padding:16px;border:2px solid rgba(92,107,192,0.2);">
+          <div style="font-size:1.5rem;margin-bottom:6px;">↔️ Bottom edge — News ticker</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--dark);margin-bottom:4px;">PH News RSS Feed</div>
+          <div style="font-size:0.82rem;color:#90A4AE;font-weight:700;">Thin scrolling bar across the very bottom. Ultra-dim text. Fetches top PH headlines via RSS every 30 minutes. You can glance at news without any extra device.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: MIRROR PREVIEW ══════════════ -->
+  <div class="tab-content" id="tab-mirror">
+    <div class="mirror-preview-section">
+      <h2 class="section-title">🪞 Live Mirror Preview</h2>
+      <div class="mirror-frame-wrap">
+
+        <!-- Actual mirror mockup -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          <div style="font-size:0.75rem;font-weight:800;color:#90A4AE;text-transform:uppercase;letter-spacing:0.09em;">ReflectIQ display</div>
+          <div class="mirror-display" style="flex:0 0 260px;width:260px;min-height:400px;">
+            <div class="mirror-glass"></div>
+            <div class="pir-dot" id="prev-pir"></div>
+            <!-- Silhouette -->
+            <svg style="position:absolute;left:50%;top:8%;transform:translateX(-50%);width:40%;height:78%;opacity:0.065;z-index:1;" viewBox="0 0 100 220">
+              <ellipse cx="50" cy="22" rx="16" ry="18" fill="white"/>
+              <path d="M20 80 Q18 140 22 200 L38 200 L40 140 L50 155 L60 140 L62 200 L78 200 Q82 140 80 80 Q70 55 50 55 Q30 55 20 80Z" fill="white"/>
+              <path d="M20 80 Q5 90 2 130 L18 132 Q20 105 28 90Z" fill="white"/>
+              <path d="M80 80 Q95 90 98 130 L82 132 Q80 105 72 90Z" fill="white"/>
+            </svg>
+            <!-- TL: clock -->
+            <div class="mw mw-tl">
+              <div class="m-time" id="prev-time">07:42</div>
+              <div class="m-date" id="prev-date">Wednesday, April 29</div>
+            </div>
+            <!-- TC: quote -->
+            <div class="mw" style="top:18px;left:50%;transform:translateX(-50%);text-align:center;width:38%;z-index:5;">
+              <div class="m-quote" id="prev-quote">"Getting started is the secret of getting ahead."</div>
+            </div>
+            <!-- TR: weather -->
+            <div class="mw mw-tr" id="prev-weather-block">
+              <div style="font-size:11px;color:rgba(255,255,255,0.38);" id="prev-weather-icon">⛅</div>
+              <div class="m-temp" id="prev-temp">31°C</div>
+              <div class="m-cond" id="prev-cond">QC · Partly cloudy</div>
+            </div>
+            <!-- BL: schedule -->
+            <div class="mw mw-bl">
+              <div class="m-sec-lbl">Today</div>
+              <div class="m-sched-item"><div class="m-sdot" style="background:#4ADE80;"></div><div class="m-stime">8:00</div><div class="m-stitle" style="margin-left:4px;">Standup</div></div>
+              <div class="m-sched-item"><div class="m-sdot" style="background:#60A5FA;"></div><div class="m-stime">10:30</div><div class="m-stitle" style="margin-left:4px;">Demo</div></div>
+              <div class="m-sched-item"><div class="m-sdot" style="background:#FBBF24;"></div><div class="m-stime">3:00</div><div class="m-stitle" style="margin-left:4px;">Meeting</div></div>
+            </div>
+            <!-- BC: greeting -->
+            <div class="mw mw-bc"><div class="m-greet" id="prev-greet">Good morning, Juan.</div></div>
+            <!-- BR: sensors -->
+            <div class="mw mw-br">
+              <div class="m-sec-lbl" style="text-align:right;">Room</div>
+              <div class="m-sensor-row">
+                <div><div class="m-sval" id="prev-sensor-t">29°C</div><div class="m-slbl">Temp</div></div>
+                <div><div class="m-sval" id="prev-sensor-h">72%</div><div class="m-slbl">Hum</div></div>
+              </div>
+            </div>
+            <!-- Ticker -->
+            <div class="mirror-ticker">
+              <span class="ticker-inner">◆ DICT launches digital literacy program for public schools &nbsp;&nbsp; ◆ DOLE records 3.1% unemployment rate &nbsp;&nbsp; ◆ Pagasa: afternoon showers over Metro Manila &nbsp;&nbsp; ◆ Senate approves AI governance bill &nbsp;&nbsp; ◆ PH stocks up 0.8% on positive trade data &nbsp;&nbsp;</span>
+            </div>
+          </div>
+          <div style="font-size:0.72rem;color:#90A4AE;font-weight:700;text-align:center;">Center clear for your reflection 👤</div>
+        </div>
+
+        <!-- Widget control panel -->
+        <div class="mirror-info">
+          <div class="mirror-info-title">🧩 Active Widgets</div>
+          <div class="widget-list">
+            <div class="widget-row">
+              <div class="widget-row-icon">🕐</div>
+              <div><div class="widget-row-name">Clock & Date</div><div class="widget-row-desc">RTC module · updates every second</div></div>
+              <div class="widget-badge badge-hw">DS3231</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">🌤️</div>
+              <div><div class="widget-row-name">Weather</div><div class="widget-row-desc">OpenWeatherMap · refreshes 10 min</div></div>
+              <div class="widget-badge badge-api">API</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">📅</div>
+              <div><div class="widget-row-name">Schedule</div><div class="widget-row-desc">JSON planner · 3 events shown</div></div>
+              <div class="widget-badge badge-live">Live</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">💬</div>
+              <div><div class="widget-row-name">Quote</div><div class="widget-row-desc">Local DB · rotates daily</div></div>
+              <div class="widget-badge badge-rtc">Local</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">📰</div>
+              <div><div class="widget-row-name">News Ticker</div><div class="widget-row-desc">RSS feed · refreshes 30 min</div></div>
+              <div class="widget-badge badge-api">RSS</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">🌡️</div>
+              <div><div class="widget-row-name">Room Sensor</div><div class="widget-row-desc">DHT11 via Arduino serial · 5s</div></div>
+              <div class="widget-badge badge-hw">Hardware</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">👁️</div>
+              <div><div class="widget-row-name">PIR Motion</div><div class="widget-row-desc">HC-SR501 · display active</div></div>
+              <div class="widget-badge badge-live" style="background:#E8F5E9;color:#2E7D32;">Active</div>
+            </div>
+            <div class="widget-row">
+              <div class="widget-row-icon">👤</div>
+              <div><div class="widget-row-name">User Greeting</div><div class="widget-row-desc">Personalized · time-aware</div></div>
+              <div class="widget-badge badge-rtc">Local</div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;">
+            <div style="font-size:0.78rem;font-weight:800;color:#90A4AE;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">🔋 Power</div>
+            <div class="power-bar-bg"><div class="power-bar-fill"></div></div>
+            <div class="power-label"><span>5V · Stable power supply</span><span>88%</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: HARDWARE ══════════════ -->
+  <div class="tab-content" id="tab-hardware">
+
+    <!-- Flow diagram -->
+    <div class="flow-section">
+      <h2 class="flow-title">⚙️ How ReflectIQ Works — Step by Step</h2>
+      <div class="flow-steps">
+        <div class="flow-step" id="fs1"><div class="flow-emoji">👁️</div><div class="flow-label">PIR Sensor</div><div class="flow-sub">Detects user presence</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" id="fs2"><div class="flow-emoji">🧩</div><div class="flow-label">Arduino</div><div class="flow-sub">Reads sensors & sends data</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" id="fs3"><div class="flow-emoji">🍓</div><div class="flow-label">Raspberry Pi</div><div class="flow-sub">Fetches APIs, renders UI</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" id="fs4"><div class="flow-emoji">🖥️</div><div class="flow-label">LCD Display</div><div class="flow-sub">Shows widgets behind glass</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" id="fs5"><div class="flow-emoji">🪞</div><div class="flow-label">Two-Way Mirror</div><div class="flow-sub">Reflects + shows info</div></div>
+      </div>
+    </div>
+
+    <!-- HW layout -->
+    <div class="hw-layout">
+      <!-- Left: mini mirror unit -->
+      <div class="hw-card">
+        <div class="hw-card-title">🪞 Physical Unit</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <!-- Mini mirror -->
+          <div class="hw-mirror-mini" id="hw-mini-mirror">
+            <div class="hw-mirror-glass"></div>
+            <div class="hw-pir" id="hw-pir-dot"></div>
+            <div class="hw-m-time" id="hw-time">07:42</div>
+            <div class="hw-m-date" id="hw-date-mini">Wed, Apr 29</div>
+            <div class="hw-m-weather">
+              <div class="hw-m-wtemp" id="hw-wtemp">31°C</div>
+              <div class="hw-m-wcond" id="hw-wcond">Partly cloudy</div>
+            </div>
+            <div class="hw-m-bottom">
+              <div class="hw-m-greet" id="hw-greet-mini">Good morning, Juan.</div>
+              <div class="hw-m-srow"><div class="hw-m-sdot" style="background:#4ADE80;"></div><div class="hw-m-stxt">8:00 Standup</div></div>
+              <div class="hw-m-srow"><div class="hw-m-sdot" style="background:#60A5FA;"></div><div class="hw-m-stxt">10:30 Demo</div></div>
+              <div class="hw-m-srow"><div class="hw-m-sdot" style="background:#FBBF24;"></div><div class="hw-m-stxt">3:00 Meeting</div></div>
+            </div>
+            <div class="hw-m-ticker"><span class="hw-m-ticker-inner">◆ PH news: DICT launches digital literacy · Pagasa: showers Metro Manila ◆</span></div>
+          </div>
+
+          <div style="text-align:center;">
+            <div style="font-size:0.72rem;font-weight:800;color:#90A4AE;margin-bottom:6px;">LED Indicators</div>
+            <div class="led-strip">
+              <div><div class="led on-green" id="led-pwr"></div><div class="led-label">Power</div></div>
+              <div><div class="led on-blue"  id="led-wifi"></div><div class="led-label">WiFi</div></div>
+              <div><div class="led on-green" id="led-pir"></div><div class="led-label">PIR</div></div>
+              <div><div class="led off"      id="led-sleep"></div><div class="led-label">Sleep</div></div>
+            </div>
+          </div>
+
+          <div style="width:100%">
+            <div style="font-size:0.72rem;font-weight:800;color:#90A4AE;margin-bottom:4px;">🔋 Power</div>
+            <div class="power-bar-bg"><div class="power-bar-fill"></div></div>
+            <div class="power-label"><span>5V supply</span><span>88%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: simulation -->
+      <div class="hw-card">
+        <div class="hw-card-title">🖥️ Live Simulation</div>
+        <div class="sim-grid">
+          <div class="sim-block">
+            <div class="sim-block-title">👁️ PIR Sensor</div>
+            <div class="pir-status-block">
+              <div class="pir-circle" id="pir-circle">👤</div>
+              <div class="pir-label" id="pir-label">User Detected</div>
+            </div>
+          </div>
+          <div class="sim-block">
+            <div class="sim-block-title">📡 Data Sources</div>
+            <div class="api-status">
+              <div class="api-row"><div class="api-dot" style="background:#4ADE80;" id="api-rtc-dot"></div><span id="api-rtc">RTC: 07:42</span></div>
+              <div class="api-row"><div class="api-dot" style="background:#4ADE80;" id="api-weather-dot"></div><span id="api-weather">Weather: 31°C ⛅</span></div>
+              <div class="api-row"><div class="api-dot" style="background:#FBBF24;" id="api-dht-dot"></div><span id="api-dht">DHT11: 29°C 72%</span></div>
+              <div class="api-row"><div class="api-dot" style="background:#4ADE80;" id="api-rss-dot"></div><span id="api-rss">RSS: 5 headlines</span></div>
+            </div>
+          </div>
+          <div class="sim-block">
+            <div class="sim-block-title">🧩 Widgets</div>
+            <div class="widget-toggles" id="widget-toggles">
+              <div class="w-toggle"><span>Clock</span><button class="toggle-pill" onclick="toggleWidget(this,'clock')" data-widget="clock"></button></div>
+              <div class="w-toggle"><span>Weather</span><button class="toggle-pill" onclick="toggleWidget(this,'weather')" data-widget="weather"></button></div>
+              <div class="w-toggle"><span>Schedule</span><button class="toggle-pill" onclick="toggleWidget(this,'sched')" data-widget="sched"></button></div>
+              <div class="w-toggle"><span>Sensor</span><button class="toggle-pill" onclick="toggleWidget(this,'sensor')" data-widget="sensor"></button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sim-response-wrap">
+          <div class="sim-response-label">🪞 Mirror Display Status</div>
+          <div class="sim-response-text" id="sim-response">All widgets active. PIR sensor detected user — display is ON. Room temperature 29°C, humidity 72%. Weather fetched successfully. Clock synced to RTC.</div>
+        </div>
+
+        <div class="sim-controls">
+          <button class="sim-btn sim-btn-pir"     onclick="simWakeUp()">👤 Simulate Walk-Up</button>
+          <button class="sim-btn sim-btn-weather"  onclick="simFetchWeather()">☁️ Fetch Weather</button>
+          <button class="sim-btn sim-btn-sleep"    onclick="simSleep()">😴 PIR Sleep Mode</button>
+          <button class="sim-btn sim-btn-reset"    onclick="simReset()">🔄 Reset</button>
+        </div>
+      </div>
+
+      <!-- Right: components -->
+      <div class="hw-card">
+        <div class="hw-card-title">🔩 Components</div>
+        <div class="comp-list" id="comp-list">
+          <div class="comp-item active-comp" id="comp-rpi"><div class="comp-icon">🍓</div><div><div class="comp-name">Raspberry Pi 4</div><div class="comp-status active-text" id="cs-rpi">● Running dashboard</div></div></div>
+          <div class="comp-item active-comp" id="comp-ard"><div class="comp-icon">🧩</div><div><div class="comp-name">Arduino Uno</div><div class="comp-status active-text" id="cs-ard">● Sending sensor data</div></div></div>
+          <div class="comp-item active-comp" id="comp-pir"><div class="comp-icon">👁️</div><div><div class="comp-name">PIR HC-SR501</div><div class="comp-status active-text" id="cs-pir">● User detected</div></div></div>
+          <div class="comp-item active-comp" id="comp-dht"><div class="comp-icon">🌡️</div><div><div class="comp-name">DHT11 Sensor</div><div class="comp-status active-text" id="cs-dht">● 29°C · 72%</div></div></div>
+          <div class="comp-item active-comp" id="comp-rtc"><div class="comp-icon">⏰</div><div><div class="comp-name">DS3231 RTC</div><div class="comp-status active-text" id="cs-rtc">● 07:42:00</div></div></div>
+          <div class="comp-item active-comp" id="comp-lcd"><div class="comp-icon">🖥️</div><div><div class="comp-name">LCD / Monitor</div><div class="comp-status active-text" id="cs-lcd">● Displaying widgets</div></div></div>
+          <div class="comp-item" id="comp-led"><div class="comp-icon">💡</div><div><div class="comp-name">LED Strip</div><div class="comp-status" id="cs-led">○ Ambient off</div></div></div>
+          <div class="comp-item" id="comp-pwr"><div class="comp-icon">🔋</div><div><div class="comp-name">Power Supply</div><div class="comp-status active-text">● 5V · 88%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Serial log -->
+    <div class="sim-panel">
+      <div class="sim-header">
+        <div class="sim-title">🖥️ Raspberry Pi Terminal</div>
+        <div class="sim-status-badge" id="serial-badge">System Active</div>
+      </div>
+      <div class="sim-log" id="serial-log">
+        <p class="log-line"><span class="log-time">[00:00:00]</span> ReflectIQ v2.0 starting...</p>
+        <p class="log-line"><span class="log-time">[00:00:01]</span> Raspberry Pi 4 — 4GB RAM ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:01]</span> Arduino Uno connected via USB serial /dev/ttyUSB0 ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:02]</span> DS3231 RTC module synced — 07:42:00 ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:02]</span> DHT11 sensor reading: 29°C, 72% humidity ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:03]</span> <span class="log-warn">Connecting to OpenWeatherMap API...</span></p>
+        <p class="log-line"><span class="log-time">[00:00:03]</span> Weather fetched: Quezon City, 31°C, Partly Cloudy ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:04]</span> RSS feed loaded: 5 PH headlines ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:04]</span> <span class="log-info">PIR sensor active — HC-SR501 on GPIO 17</span></p>
+        <p class="log-line"><span class="log-time">[00:00:05]</span> Dashboard rendering — all 8 widgets loaded ✓</p>
+        <p class="log-line"><span class="log-time">[00:00:05]</span> <span class="log-warn">User profile: Juan · Grade 3 BSIT</span></p>
+        <p class="log-line"><span class="log-time">[00:00:05]</span> System active. Waiting for motion...</p>
+      </div>
+    </div>
+
+    <!-- Wiring Diagram -->
+    <h2 class="section-title">🔌 Hardware Wiring Diagram</h2>
+    <div class="arduino-card">
+      <svg viewBox="0 0 900 440" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:680px;">
+        <!-- Raspberry Pi -->
+        <rect x="340" y="140" width="220" height="160" rx="12" fill="#1A237E" stroke="#0D1B6E" stroke-width="2"/>
+        <text x="450" y="163" text-anchor="middle" fill="#4FC3F7" font-size="12" font-family="'Fredoka One',cursive">Raspberry Pi 4</text>
+        <text x="450" y="178" text-anchor="middle" fill="#69F0AE" font-size="8" font-family="monospace">Main controller</text>
+        <!-- RPi GPIO pins left -->
+        <rect x="328" y="168" width="14" height="8" rx="3" fill="#FFD600"/>
+        <rect x="328" y="182" width="14" height="8" rx="3" fill="#FF7043"/>
+        <rect x="328" y="196" width="14" height="8" rx="3" fill="#CE93D8"/>
+        <rect x="328" y="210" width="14" height="8" rx="3" fill="#69F0AE"/>
+        <rect x="328" y="224" width="14" height="8" rx="3" fill="#4FC3F7"/>
+        <!-- RPi pins right -->
+        <rect x="558" y="168" width="14" height="8" rx="3" fill="#FF7043"/>
+        <rect x="558" y="182" width="14" height="8" rx="3" fill="#69F0AE"/>
+        <rect x="558" y="196" width="14" height="8" rx="3" fill="#FFD600"/>
+        <rect x="558" y="210" width="14" height="8" rx="3" fill="#CE93D8"/>
+
+        <!-- Arduino Uno (slave) -->
+        <rect x="340" y="330" width="220" height="70" rx="10" fill="#3E2723" stroke="#1B0000" stroke-width="2"/>
+        <text x="450" y="353" text-anchor="middle" fill="#FF7043" font-size="11" font-family="'Fredoka One',cursive">Arduino Uno</text>
+        <text x="450" y="368" text-anchor="middle" fill="#FFCCBC" font-size="8" font-family="monospace">Sensor bridge · USB serial</text>
+        <text x="450" y="383" text-anchor="middle" fill="#90A4AE" font-size="7" font-family="monospace">/dev/ttyUSB0</text>
+        <line x1="450" y1="300" x2="450" y2="330" stroke="#FF7043" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- PIR Sensor -->
+        <rect x="60" y="60" width="140" height="60" rx="10" fill="#E8F5E9" stroke="#69F0AE" stroke-width="2"/>
+        <text x="130" y="84" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">👁️ PIR HC-SR501</text>
+        <text x="130" y="100" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">GPIO 17 (BCM)</text>
+        <line x1="200" y1="90" x2="328" y2="172" stroke="#69F0AE" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- DHT11 -->
+        <rect x="60" y="160" width="140" height="60" rx="10" fill="#F3E5F5" stroke="#CE93D8" stroke-width="2"/>
+        <text x="130" y="184" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">🌡️ DHT11 Sensor</text>
+        <text x="130" y="200" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">Arduino Pin 7</text>
+        <line x1="200" y1="190" x2="340" y2="356" stroke="#CE93D8" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- DS3231 RTC -->
+        <rect x="60" y="260" width="140" height="60" rx="10" fill="#FFFDE7" stroke="#FFD600" stroke-width="2"/>
+        <text x="130" y="284" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">⏰ DS3231 RTC</text>
+        <text x="130" y="300" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">I2C SDA/SCL (GPIO 2/3)</text>
+        <line x1="200" y1="290" x2="328" y2="200" stroke="#FFD600" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- LCD Display -->
+        <rect x="700" y="60" width="140" height="60" rx="10" fill="#E3F2FD" stroke="#4FC3F7" stroke-width="2"/>
+        <text x="770" y="84" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">🖥️ LCD Monitor</text>
+        <text x="770" y="100" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">HDMI out</text>
+        <line x1="572" y1="172" x2="700" y2="90" stroke="#4FC3F7" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- LED Strip -->
+        <rect x="700" y="160" width="140" height="60" rx="10" fill="#FFFDE7" stroke="#FFD600" stroke-width="2"/>
+        <text x="770" y="184" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">💡 LED Strip</text>
+        <text x="770" y="200" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">GPIO 18 (PWM)</text>
+        <line x1="572" y1="186" x2="700" y2="190" stroke="#FFD600" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- Two-way mirror glass -->
+        <rect x="700" y="260" width="140" height="60" rx="10" fill="#E8EAF6" stroke="#5C6BC0" stroke-width="2"/>
+        <text x="770" y="284" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">🪞 Two-Way Glass</text>
+        <text x="770" y="300" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">In front of LCD</text>
+        <line x1="700" y1="290" x2="840" y2="290" stroke="#5C6BC0" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="840" y1="90" x2="840" y2="290" stroke="#5C6BC0" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="770" y1="120" x2="840" y2="120" stroke="#5C6BC0" stroke-width="1" stroke-dasharray="3,2"/>
+
+        <!-- Power supply -->
+        <rect x="700" y="350" width="140" height="55" rx="10" fill="#FCE4EC" stroke="#F48FB1" stroke-width="2"/>
+        <text x="770" y="374" text-anchor="middle" fill="#1A237E" font-size="11" font-weight="700" font-family="'Nunito',sans-serif">🔋 5V Power</text>
+        <text x="770" y="390" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">USB / Wall adapter</text>
+        <line x1="572" y1="210" x2="700" y2="375" stroke="#F48FB1" stroke-width="2" stroke-dasharray="5,3"/>
+
+        <!-- Cloud/WiFi -->
+        <rect x="355" y="38" width="190" height="44" rx="22" fill="#E3F2FD" stroke="#4FC3F7" stroke-width="2"/>
+        <text x="450" y="57" text-anchor="middle" fill="#1A237E" font-size="10" font-weight="700" font-family="'Nunito',sans-serif">☁️ Internet APIs (WiFi)</text>
+        <text x="450" y="72" text-anchor="middle" fill="#78909C" font-size="8" font-family="monospace">OpenWeatherMap · RSS Feed</text>
+        <line x1="450" y1="82" x2="450" y2="140" stroke="#4FC3F7" stroke-width="2" stroke-dasharray="4,3"/>
+
+        <!-- Pin labels -->
+        <text x="323" y="175" text-anchor="end" fill="#78909C" font-size="7" font-family="monospace">PIR</text>
+        <text x="323" y="189" text-anchor="end" fill="#78909C" font-size="7" font-family="monospace">BTN</text>
+        <text x="323" y="203" text-anchor="end" fill="#78909C" font-size="7" font-family="monospace">SDA</text>
+        <text x="323" y="217" text-anchor="end" fill="#78909C" font-size="7" font-family="monospace">SCL</text>
+        <text x="323" y="231" text-anchor="end" fill="#78909C" font-size="7" font-family="monospace">GND</text>
+        <text x="576" y="175" fill="#78909C" font-size="7" font-family="monospace">HDMI</text>
+        <text x="576" y="189" fill="#78909C" font-size="7" font-family="monospace">LED</text>
+        <text x="576" y="203" fill="#78909C" font-size="7" font-family="monospace">5V</text>
+        <text x="576" y="217" fill="#78909C" font-size="7" font-family="monospace">GND</text>
+
+        <!-- GND bus -->
+        <line x1="450" y1="300" x2="450" y2="415" stroke="#888" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <line x1="130" y1="380" x2="770" y2="380" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="130" y1="320" x2="130" y2="380" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="770" y1="370" x2="770" y2="380" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="450" y1="415" x2="450" y2="380" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="450" y="430" text-anchor="middle" fill="#888" font-size="8" font-family="monospace">Common Ground Rail</text>
+      </svg>
+    </div>
+
+  </div><!-- end tab-hardware -->
+</main>
+
+
+
+<script>
+  // ── Tab switching ──
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.page-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    const idx = {home:0,features:1,mirror:2,hardware:3}[tab];
+    if(idx !== undefined) document.querySelectorAll('.page-tab')[idx].classList.add('active');
+  }
+
+  // ── Live clock ──
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const shortDays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const shortMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const timeStr = h + ':' + m;
+    const dateStr = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+    const miniDate = shortDays[now.getDay()] + ', ' + shortMonths[now.getMonth()] + ' ' + now.getDate();
+
+    // Hero clock
+    const hc = document.getElementById('hero-clock');
+    if (hc) hc.textContent = timeStr;
+    // Preview tab
+    const pt = document.getElementById('prev-time');
+    if (pt) pt.textContent = timeStr;
+    const pd = document.getElementById('prev-date');
+    if (pd) pd.textContent = dateStr;
+    // HW tab mini
+    const hwt = document.getElementById('hw-time');
+    if (hwt) hwt.textContent = timeStr;
+    const hwd = document.getElementById('hw-date-mini');
+    if (hwd) hwd.textContent = miniDate;
+    // API status row
+    const ar = document.getElementById('api-rtc');
+    if (ar) ar.textContent = 'RTC: ' + timeStr;
+
+    // Greeting
+    const hr = now.getHours();
+    const greet = hr < 12 ? 'Good morning, Juan.' : hr < 18 ? 'Good afternoon, Juan.' : 'Good evening, Juan.';
+    const pg = document.getElementById('prev-greet'); if (pg) pg.textContent = greet;
+    const hg = document.getElementById('hw-greet-mini'); if (hg) hg.textContent = greet;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // ── Widget toggles ──
+  const widgetState = { clock:true, weather:true, sched:true, sensor:true };
+  function toggleWidget(btn, name) {
+    widgetState[name] = !widgetState[name];
+    btn.classList.toggle('off', !widgetState[name]);
+    updateSimResponse();
+    appendLog((widgetState[name] ? '<span class="log-warn">Widget enabled: ' : '<span class="log-warn">Widget disabled: ') + name + '</span>');
+  }
+  // Init toggles as on
+  document.querySelectorAll('.toggle-pill').forEach(b => b.classList.remove('off'));
+
+  // ── Simulation state ──
+  let logTime = 13;
+  function ts() { const s = String(logTime++).padStart(2,'0'); return '[00:00:' + s + ']'; }
+  function appendLog(html) {
+    const log = document.getElementById('serial-log');
+    const p = document.createElement('p');
+    p.className = 'log-line';
+    p.innerHTML = '<span class="log-time">' + ts() + '</span> ' + html;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setComp(id, text, active) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'comp-status' + (active ? ' active-text' : '');
+    el.textContent = (active ? '● ' : '○ ') + text;
+  }
+
+  function updateSimResponse() {
+    const on = Object.entries(widgetState).filter(([k,v])=>v).map(([k])=>k);
+    const off = Object.entries(widgetState).filter(([k,v])=>!v).map(([k])=>k);
+    let msg = 'Active widgets: ' + (on.length ? on.join(', ') : 'none') + '. ';
+    if (off.length) msg += 'Disabled: ' + off.join(', ') + '.';
+    document.getElementById('sim-response').textContent = msg;
+  }
+
+  let userPresent = true;
+
+  function simWakeUp() {
+    userPresent = true;
+    const pir = document.getElementById('pir-circle');
+    pir.className = 'pir-circle';
+    pir.textContent = '👤';
+    document.getElementById('pir-label').textContent = 'User Detected';
+    document.getElementById('hw-pir-dot').style.background = '#4ADE80';
+    document.getElementById('led-pir').className = 'led on-green';
+    document.getElementById('led-sleep').className = 'led off';
+    setComp('cs-pir','User detected', true);
+    setComp('cs-lcd','Displaying widgets', true);
+    document.getElementById('sim-response').textContent = 'PIR motion detected! Display waking up — all widgets loading. LEDs: active. LCD: ON.';
+    document.getElementById('serial-badge').textContent = 'Display Active';
+    appendLog('<span class="log-info">PIR motion detected on GPIO 17</span>');
+    appendLog('Display waking up — activating all widgets...');
+    appendLog('LCD power: ON ✓');
+  }
+
+  function simFetchWeather() {
+    document.getElementById('api-weather-dot').style.background = '#FBBF24';
+    document.getElementById('api-weather').textContent = 'Weather: fetching...';
+    document.getElementById('serial-badge').textContent = 'Fetching API...';
+    appendLog('<span class="log-warn">GET https://api.openweathermap.org/... Quezon City</span>');
+    setTimeout(() => {
+      const weathers = [
+        {t:'31°C',c:'Partly cloudy',i:'⛅'},
+        {t:'28°C',c:'Thunderstorm',i:'⛈️'},
+        {t:'33°C',c:'Sunny',i:'☀️'},
+        {t:'27°C',c:'Rainy',i:'🌧️'},
+      ];
+      const w = weathers[Math.floor(Math.random() * weathers.length)];
+      document.getElementById('api-weather-dot').style.background = '#4ADE80';
+      document.getElementById('api-weather').textContent = 'Weather: ' + w.t + ' ' + w.i;
+      // Update mirror previews
+      ['prev-temp','hw-wtemp'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=w.t; });
+      ['prev-cond','hw-wcond'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='QC · ' + w.c; });
+      const pi = document.getElementById('prev-weather-icon'); if(pi) pi.textContent=w.i;
+      document.getElementById('serial-badge').textContent = 'System Active';
+      appendLog('Weather updated: ' + w.t + ', ' + w.c + ' ✓');
+    }, 2000);
+  }
+
+  function simSleep() {
+    userPresent = false;
+    const pir = document.getElementById('pir-circle');
+    pir.className = 'pir-circle inactive';
+    pir.textContent = '💤';
+    document.getElementById('pir-label').textContent = 'No Motion';
+    document.getElementById('hw-pir-dot').style.background = '#D1D5DB';
+    document.getElementById('led-pir').className = 'led off';
+    document.getElementById('led-sleep').className = 'led on-amber';
+    setComp('cs-pir','No motion', false);
+    setComp('cs-lcd','Sleep mode — display off', false);
+    document.getElementById('sim-response').textContent = 'PIR: no motion for 60s. Display sleeping — looks like a normal mirror. Power saving mode active.';
+    document.getElementById('serial-badge').textContent = 'Sleep Mode';
+    appendLog('<span class="log-warn">PIR: no motion detected — 60s timeout</span>');
+    appendLog('Entering sleep mode — LCD power off ✓');
+    appendLog('Mirror now looks like a plain mirror 🪞');
+  }
+
+  function simReset() {
+    userPresent = true;
+    const pir = document.getElementById('pir-circle');
+    pir.className = 'pir-circle';
+    pir.textContent = '👤';
+    document.getElementById('pir-label').textContent = 'User Detected';
+    document.getElementById('hw-pir-dot').style.background = '#4ADE80';
+    document.getElementById('led-pir').className = 'led on-green';
+    document.getElementById('led-sleep').className = 'led off';
+    document.getElementById('api-weather-dot').style.background = '#4ADE80';
+    document.getElementById('api-weather').textContent = 'Weather: 31°C ⛅';
+    ['prev-temp','hw-wtemp'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='31°C'; });
+    ['prev-cond','hw-wcond'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='QC · Partly cloudy'; });
+    const pi = document.getElementById('prev-weather-icon'); if(pi) pi.textContent='⛅';
+    // Reset toggles
+    Object.keys(widgetState).forEach(k => widgetState[k]=true);
+    document.querySelectorAll('.toggle-pill').forEach(b => b.classList.remove('off'));
+    setComp('cs-pir','User detected', true);
+    setComp('cs-lcd','Displaying widgets', true);
+    document.getElementById('sim-response').textContent = 'System reset. All widgets active. PIR sensor detected user — display is ON. Room temperature 29°C, humidity 72%.';
+    document.getElementById('serial-badge').textContent = 'System Active';
+    appendLog('System reset — all modules restored ✓');
+  }
+
+  // DHT11 live simulation (small drift)
+  setInterval(() => {
+    const t = 28 + Math.round(Math.random() * 3);
+    const h = 70 + Math.round(Math.random() * 5);
+    const dht = document.getElementById('api-dht'); if(dht) dht.textContent='DHT11: '+t+'°C '+h+'%';
+    const st = document.getElementById('prev-sensor-t'); if(st) st.textContent=t+'°C';
+    const sh = document.getElementById('prev-sensor-h'); if(sh) sh.textContent=h+'%';
+    setComp('cs-dht', t+'°C · '+h+'%', true);
+  }, 5000);
+</script>
+</body>
+</html>
